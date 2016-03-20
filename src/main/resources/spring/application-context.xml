@@ -28,7 +28,7 @@
 	<context:annotation-config />
 	
 	<!-- Hazelcast delegates -->
-	<bean id="hazelcastWallDelegate" class="com.codurance.social.ha.wall.HazelcastWallDelegate">
+<!-- 	<bean id="hazelcastWallDelegate" class="com.codurance.social.ha.wall.HazelcastWallDelegate">
 		<constructor-arg index="0" value="spring/social-hazelcast.xml" />
 	</bean>
 
@@ -36,10 +36,10 @@
 		class="com.codurance.social.ha.wall.HazelcastWallRequestListener">
 		<constructor-arg index="0" value="spring/social-hazelcast.xml" />
 	</bean>
-
+ -->
 	<!-- Hazelcast services -->
-	<bean id="wallService" class="com.codurance.social.ha.wall.MessageService" />
-
+	<!-- <bean id="wallService" class="com.codurance.social.ha.wall.MessageService" />
+ -->
 	<!-- other services -->
 	<bean id="commandProcessor" class="com.codurance.social.app.CommandProcessor" />
 

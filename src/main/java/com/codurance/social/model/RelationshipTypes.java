@@ -10,4 +10,6 @@ public class RelationshipTypes {
 	public static final String FOLLOWED_BY = "FOLLOWED_BY";
 	public static final String POSTINGS = "POSTINGS";
 	public static final String POSTED_BY = "POSTED_BY";
+	public static final String OWNED_BY = "OWNED_BY";
+	public static final String OWNS = "OWNS";
 }

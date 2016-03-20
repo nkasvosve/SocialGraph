@@ -1,5 +1,6 @@
 package com.codurance.social.model;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -7,17 +8,18 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.springframework.data.neo4j.annotation.GraphId;
 import org.springframework.data.neo4j.annotation.Indexed;
+import org.springframework.data.neo4j.annotation.NodeEntity;
 
-public class BaseEntity {
+public class BaseEntity implements Serializable {
 
 	@GraphId
 	protected Long nodeId;
 	@Indexed
 	protected String id;
-	private DateTime dateCreated;
+	private Long dateCreated;
 
 	public BaseEntity() {
-		dateCreated = new DateTime();
+		dateCreated = new DateTime().getMillis();
 		id = UUID.randomUUID().toString();
 	}
 
@@ -38,36 +40,20 @@ public class BaseEntity {
 	}
 
 	public DateTime getDateCreated() {
-		return dateCreated;
+		return new DateTime(dateCreated);
 	}
 
 	public void setDateCreated(DateTime dateCreated) {
+		this.dateCreated = dateCreated.getMillis();
+	}
+
+	public void setDateCreated(Long dateCreated) {
 		this.dateCreated = dateCreated;
-	}
-
-	public String getFormattedDateCreated() {
-		DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MMM-dd HH:mm");
-		return dateCreated.toString(fmt);
-	}
-
-	public String getFormattedDayCreated() {
-		DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MMM-dd");
-		return dateCreated.toString(fmt);
-	}
-
-	public String getFormattedDay() {
-		DateTimeFormatter fmt = DateTimeFormat.forPattern("dd MMM yyyy");
-		return dateCreated.toString(fmt);
-	}
-
-	public String formattedDate(DateTime d) {
-		DateTimeFormatter fmt = DateTimeFormat.forPattern("EEE, d MMM yyyy");
-		return d.toString(fmt);
 	}
 
 	@Override
 	public String toString() {
-		return "BaseEntity [nodeId=" + nodeId + ", id=" + id + ", dateCreated=" + dateCreated + "]";
+		return "BaseEntity [nodeId=" + nodeId + ", id=" + id + ", " + "dateCreated=" + new DateTime(dateCreated) + "]";
 	}
 
 	@Override
@@ -106,4 +92,6 @@ public class BaseEntity {
 			return false;
 		return true;
 	}
+
+	private static final long serialVersionUID = 1L;
 }

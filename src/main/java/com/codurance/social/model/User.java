@@ -1,8 +1,7 @@
 package com.codurance.social.model;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.HashSet;
 
 import org.neo4j.graphdb.Direction;
 import org.springframework.data.neo4j.annotation.NodeEntity;
@@ -21,7 +20,7 @@ public class User extends BaseEntity {
 	private String userName;
 
 	@RelatedTo(type = RelationshipTypes.POSTINGS, direction = Direction.OUTGOING)
-	private Set<Posting> postings = new LinkedHashSet<>();
+	private Set<Posting> postings = new HashSet<>();
 
 	@RelatedTo(type = RelationshipTypes.FOLLOWED_BY, direction = Direction.OUTGOING)
 	private Set<User> followers = new HashSet<>();
@@ -29,12 +28,23 @@ public class User extends BaseEntity {
 	@RelatedTo(type = RelationshipTypes.FOLLOWS, direction = Direction.OUTGOING)
 	private Set<User> follows = new HashSet<>();
 
+	@RelatedTo(type = RelationshipTypes.OWNS, direction = Direction.OUTGOING)
+	private Wall wall = new Wall();
+	
 	public String getUserName() {
 		return userName;
 	}
 
 	public void setUserName(String userName) {
 		this.userName = userName;
+	}
+
+	public Wall getWall() {
+		return wall;
+	}
+
+	public void setWall(Wall wall) {
+		this.wall = wall;
 	}
 
 	public Set<Posting> getPostings() {
@@ -90,4 +100,6 @@ public class User extends BaseEntity {
 			return false;
 		return true;
 	}
+	private static final long serialVersionUID = 3598748752414514842L;
+
 }

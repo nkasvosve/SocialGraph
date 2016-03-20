@@ -1,16 +1,29 @@
 package com.codurance.social.app;
 
+import java.util.Set;
+import org.neo4j.graphdb.Transaction;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import com.codurance.social.ha.wall.MessageService;
+import org.springframework.data.neo4j.core.GraphDatabase;
+import org.springframework.data.neo4j.support.Neo4jTemplate;
 import com.codurance.social.model.Posting;
 import com.codurance.social.model.User;
 import com.codurance.social.repository.PostingRepository;
 import com.codurance.social.repository.UserRepository;
+
+import scala.collection.mutable.HashSet;
 
 /**
  * @author nickk
@@ -27,42 +40,16 @@ public class CommandProcessor {
 	public static final String ANSI_CYAN = "\u001B[36m";
 
 	@Autowired
-	private MessageService messageService;
-	@Autowired
 	private UserRepository userRepository;
 	@Autowired
 	private PostingRepository postingRepository;
+	@Autowired
+	private Neo4jTemplate template;
 
 	public void scanForInput() {
-
-		String userName = null;
 		Scanner scanner = new Scanner(System.in);
-
-		userName = getUserIdentifier(userName, scanner);
-
-		User theUser = userRepository.findByUserName(userName);
-
-		if (theUser == null) {
-			theUser = new User();
-			theUser.setUserName(userName);
-			userRepository.save(theUser);
-			ansi_println("Created user " + theUser);
-		} else {
-			ansi_println("Found user " + theUser);
-		}
-
-		/// -------------start interaction processing----------------
-		printHelp(userName);
+		printHelp();
 		scanProcessInputAndLoop(scanner);
-	}
-
-	private String getUserIdentifier(String userName, Scanner scanner) {
-		// prompt for identifier
-		while (StringUtils.isBlank(userName)) {
-			ansi_print("Please enter your name:");
-			userName = scanner.nextLine();
-		}
-		return userName;
 	}
 
 	private void scanProcessInputAndLoop(Scanner scanner) {
@@ -95,6 +82,7 @@ public class CommandProcessor {
 						showWall(operationalUser);
 					} else {
 						ansi_println("Failed to process command, Please try again");
+						printHelp();
 						continue;
 					}
 				} else if (tokens.length == 3) {
@@ -106,9 +94,12 @@ public class CommandProcessor {
 						String followedUserName = tokens[2].trim();
 						User followedUser = userRepository.findByUserName(followedUserName);
 						if (followedUser == null) {
-							ansi_println(String.format("Failed to find followed user %s, " + "Please try again",
+							ansi_println(String.format("Failed to find followed user %s. Now creating them",
 									followedUserName));
-							continue;
+							followedUser = new User();
+							followedUser.setUserName(followedUserName);
+							userRepository.save(followedUser);
+							ansi_println("Created user " + followedUserName);
 						}
 						follow(operationalUser, followedUser);
 					}
@@ -126,35 +117,97 @@ public class CommandProcessor {
 	}
 
 	private void showTimelineFor(User targetUser) {
-		System.out.println("show timeline for : " + targetUser);
+		DateTime now = new DateTime();
+		List<Posting> list = new ArrayList<>();
+
+		Set<Posting> postings = template.fetch(targetUser.getPostings());
+		list.addAll(postings);
+
+		Collections.sort(list, new Comparator<Posting>() {
+			@Override
+			public int compare(Posting posting1, Posting posting2) {
+				return posting1.getDateCreated().compareTo(posting2.getDateCreated());
+			}
+		});
+		printPostings(list, now);
 	}
 
 	private void showWall(User targetUser) {
-		System.out.println("show wall for : " + targetUser);
+		DateTime now = new DateTime();
+
+		List<Posting> list = new ArrayList<>();
+		Set<Posting> allPostings = new java.util.HashSet<>();
+
+		Set<Posting> postings = template.fetch(targetUser.getPostings());
+		allPostings.addAll(postings);
+
+		Set<User> follows = template.fetch(targetUser.getFollows());
+
+		for (User followedUser : follows) {
+			allPostings.addAll(template.fetch(followedUser.getPostings()));
+		}
+
+		list.addAll(allPostings);
+
+		Collections.sort(list, new Comparator<Posting>() {
+			@Override
+			public int compare(Posting posting1, Posting posting2) {
+				return posting1.getDateCreated().compareTo(posting2.getDateCreated());
+			}
+		});
+		printPostings(list, now);
+	}
+
+	private void printPostings(List<Posting> postings, DateTime now) {
+
+		for (Posting posting : postings) {
+			posting = template.fetch(posting);
+			Period period = new Period(posting.getDateCreated(), now);
+			PeriodFormatter formatter = new PeriodFormatterBuilder().appendMinutes().appendSuffix(" minute(s) ")
+					.appendSeconds().appendSuffix(" second(s) ago").toFormatter();
+			String elapsed = formatter.print(period);
+
+			template.fetch(posting.getPoster());
+			System.out.println(posting.getPoster().getUserName() + " - " + posting.getMessage() + " (" + elapsed + ")");
+		}
 	}
 
 	private void follow(User currentUser, User targetUser) {
-		System.out.println(currentUser + "now following: " + targetUser);
+
+		GraphDatabase gdb = template.getGraphDatabase();
+		Transaction tx = gdb.beginTx();
+		template.fetch(currentUser);
+		template.fetch(targetUser);
+
+		currentUser.getFollows().add(targetUser);
+		targetUser.getFollowers().add(currentUser);
+
+		tx.success();
+		tx.finish();
 	}
 
 	private void postUpdate(User currentUser, String updateText) {
-		System.out.println("posting update: " + updateText);
 		Posting posting = new Posting();
 		posting.setPoster(currentUser);
 		posting.setMessage(updateText);
+		posting.setPosterName(currentUser.getUserName());
 		postingRepository.save(posting);
+		GraphDatabase gdb = template.getGraphDatabase();
+		Transaction tx = gdb.beginTx();
 		currentUser.getPostings().add(posting);
-		userRepository.save(currentUser);
-		messageService.getWallDelegate().advise(posting);
+		currentUser.getWall().getPostings().add(posting);
+		tx.success();
+		tx.finish();
 	}
 
-	private void printHelp(String userName) {
+	private void printHelp() {
 		// print some helpful hints
 		System.out.println();
-		ansi_println(String.format("Welcome %s", userName));
-		ansi_println("Type a message to post to the board");
-		ansi_println("Input a username to read a user's timeline");
-		ansi_println("Input <username> 'follows' to follow a user, and input <username> 'wall' to see a user's wall");
+
+		ansi_println("Type a message to post to the board, e.g. jimmy -> hello my friends");
+		ansi_println("Type a friend'name to read their time line");
+		ansi_println("Type <username> 'follows' to follow a friend");
+		ansi_println("Type <username> 'wall' to see a friend's wall");
 		ansi_println("Press CNTRL-C to exit");
 		System.out.println();
 	}
