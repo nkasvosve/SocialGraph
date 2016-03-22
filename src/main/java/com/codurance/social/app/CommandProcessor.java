@@ -116,7 +116,7 @@ public class CommandProcessor {
 		}
 	}
 
-	private void showTimelineFor(User targetUser) {
+	void showTimelineFor(User targetUser) {
 		DateTime now = new DateTime();
 		List<Posting> list = new ArrayList<>();
 
@@ -132,7 +132,7 @@ public class CommandProcessor {
 		printPostings(list, now);
 	}
 
-	private void showWall(User targetUser) {
+	void showWall(User targetUser) {
 		DateTime now = new DateTime();
 
 		List<Posting> list = new ArrayList<>();
@@ -158,7 +158,7 @@ public class CommandProcessor {
 		printPostings(list, now);
 	}
 
-	private void printPostings(List<Posting> postings, DateTime now) {
+	void printPostings(List<Posting> postings, DateTime now) {
 
 		for (Posting posting : postings) {
 			posting = template.fetch(posting);
@@ -172,7 +172,7 @@ public class CommandProcessor {
 		}
 	}
 
-	private void follow(User currentUser, User targetUser) {
+	void follow(User currentUser, User targetUser) {
 
 		GraphDatabase gdb = template.getGraphDatabase();
 		Transaction tx = gdb.beginTx();
@@ -186,7 +186,7 @@ public class CommandProcessor {
 		tx.finish();
 	}
 
-	private void postUpdate(User currentUser, String updateText) {
+	void postUpdate(User currentUser, String updateText) {
 		Posting posting = new Posting();
 		posting.setPoster(currentUser);
 		posting.setMessage(updateText);
@@ -226,5 +226,17 @@ public class CommandProcessor {
 		} else {
 			System.out.println(ANSI_CYAN + str + ANSI_RESET);
 		}
+	}
+
+	public void setUserRepository(UserRepository userRepository) {
+		this.userRepository = userRepository;
+	}
+
+	public void setPostingRepository(PostingRepository postingRepository) {
+		this.postingRepository = postingRepository;
+	}
+
+	public void setTemplate(Neo4jTemplate template) {
+		this.template = template;
 	}
 }
