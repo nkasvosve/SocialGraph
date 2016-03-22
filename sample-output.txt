@@ -1,0 +1,67 @@
+Type a message to post to the board, e.g. jimmy -> hello my friends
+Type a friend'name to read their time line
+Type <username> 'follows' to follow a friend
+Type <username> 'wall' to see a friend's wall
+Press CNTRL-C to exit
+
+>nick -> hello there
+Created user nick
+>nick
+>nick wall
+>nick follows alice
+Failed to find followed user alice. Now creating them
+Created user alice
+>nick wall
+>alice wall
+>nick -> hello
+>^[[A^[[A
+>reated user [A
+>
+>nick wall
+nick - nick -> hello (5 second(s) ago)
+>nick
+nick - nick -> hello (12 second(s) ago)
+>alice
+>alice -> makadii?
+>alice
+alice - alice -> makadii? (1 second(s) ago)
+>nick
+nick - nick -> hello (27 second(s) ago)
+>nick follows alice
+>nick
+nick - nick -> hello (34 second(s) ago)
+>nick wall
+nick - nick -> hello (36 second(s) ago)
+alice - alice -> makadii? (14 second(s) ago)
+>nick
+nick - nick -> hello (43 second(s) ago)
+>nick wall
+nick - nick -> hello (47 second(s) ago)
+alice - alice -> makadii? (25 second(s) ago)
+>alice
+alice - alice -> makadii? (27 second(s) ago)
+>alice follows nick
+>alice
+alice - alice -> makadii? (33 second(s) ago)
+>alice wall
+nick - nick -> hello (59 second(s) ago)
+alice - alice -> makadii? (37 second(s) ago)
+>nick follows bob
+Failed to find followed user bob. Now creating them
+Created user bob
+>alice follows bob
+>alice
+alice - alice -> makadii? (1 minute(s) 8 second(s) ago)
+>bob good morning everyone
+Failed to process the command. Please try again
+>bob -> good morning everyone
+>nick wall
+nick - nick -> hello (1 minute(s) 55 second(s) ago)
+alice - alice -> makadii? (1 minute(s) 33 second(s) ago)
+bob -  good morning everyone (4 second(s) ago)
+>alice wall
+nick - nick -> hello (1 minute(s) 58 second(s) ago)
+alice - alice -> makadii? (1 minute(s) 36 second(s) ago)
+bob -  good morning everyone (8 second(s) ago)
+>bob wall
+bob -  good morning everyone (14 second(s) ago)
