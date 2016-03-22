@@ -21,8 +21,8 @@ import java.util.List;
  */
 public class CommandProcessorTest {
 
-    private ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    private ByteArrayOutputStream outContent;
+    private ByteArrayOutputStream errContent;
     private CommandProcessor processor;
     private UserRepository userRepository;
     private PostingRepository postingRepository;
