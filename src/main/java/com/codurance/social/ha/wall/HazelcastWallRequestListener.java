@@ -42,6 +42,7 @@ public class HazelcastWallRequestListener implements MessageListener<Posting> {
     }
 
     @PostConstruct
+    @SuppressWarnings({"unchecked","rawtypes"})
     public void listen() {
         if (hazelcastInstance != null) {
             ITopic topic = hazelcastInstance.getTopic(HazelcastWallDelegate.WALL_MESSAGES);

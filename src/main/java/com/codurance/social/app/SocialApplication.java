@@ -14,7 +14,7 @@ public class SocialApplication {
     public static void main(String[] args) {
         ApplicationContext context = new ClassPathXmlApplicationContext("/spring/application-context.xml");
         CommandProcessor commandListener = (CommandProcessor)context.getBean("commandProcessor");
-        commandListener.scanForInput();
+        commandListener.scanForInput(System.in);
     }
 }
 

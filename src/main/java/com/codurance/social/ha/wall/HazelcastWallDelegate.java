@@ -27,9 +27,10 @@ public class HazelcastWallDelegate {
         }
     }
 
-    public void advise(Posting posting) {
+    @SuppressWarnings({"unchecked","rawtypes"})
+	public void advise(Posting posting) {
         try {
-            ITopic topic = hazelcastInstance.getTopic(WALL_MESSAGES);
+			ITopic topic = hazelcastInstance.getTopic(WALL_MESSAGES);
             topic.publish(posting);
         } catch (Exception e) {
             LOG.error("Error sending message:", e);

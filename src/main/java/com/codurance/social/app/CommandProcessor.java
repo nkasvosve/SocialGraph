@@ -3,6 +3,7 @@ package com.codurance.social.app;
 import java.util.Set;
 import org.neo4j.graphdb.Transaction;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,8 +23,6 @@ import com.codurance.social.model.Posting;
 import com.codurance.social.model.User;
 import com.codurance.social.repository.PostingRepository;
 import com.codurance.social.repository.UserRepository;
-
-import scala.collection.mutable.HashSet;
 
 /**
  * @author nickk
@@ -45,76 +44,77 @@ public class CommandProcessor {
 	private PostingRepository postingRepository;
 	@Autowired
 	private Neo4jTemplate template;
+	private Scanner scanner;
 
-	public void scanForInput() {
-		Scanner scanner = new Scanner(System.in);
+	public void scanForInput(InputStream in) {
+		scanner = new Scanner(in);
 		printHelp();
-		scanProcessInputAndLoop(scanner);
+		while (true) {
+			ansi_print(">"); // show prompt
+			String userInput = scanner.nextLine(); // read input interactively
+			processInput(userInput);
+		}
 	}
 
-	private void scanProcessInputAndLoop(Scanner scanner) {
-		while (true) {
+	void processInput(String userInput) {
 
-			ansi_print(">"); // show prompt
+		if (!userInput.isEmpty()) { // skip processing of empty input
 
-			String userInput = scanner.nextLine(); // read input interactively
+			String[] tokens = userInput.split(" ");
+			String operationalUserName = tokens[0].trim();
 
-			if (!userInput.isEmpty()) { // skip processing of empty input
+			User operationalUser = userRepository.findByUserName(operationalUserName);
+			if (operationalUser == null) {
+				operationalUser = new User();
+				operationalUser.setUserName(operationalUserName);
+				userRepository.save(operationalUser);
+				ansi_println("Now Created user " + operationalUserName);
+			}
 
-				String[] tokens = userInput.split(" ");
-				String operationalUserName = tokens[0].trim();
-
-				User operationalUser = userRepository.findByUserName(operationalUserName);
-				if (operationalUser == null) {
-					operationalUser = new User();
-					operationalUser.setUserName(operationalUserName);
-					userRepository.save(operationalUser);
-					ansi_println("Created user " + operationalUserName);
-				}
-
-				if (tokens.length == 1) { // reading user time line
-					showTimelineFor(operationalUser);
-				} else if (tokens.length == 2) { // probably a command since
-													// we have a sentence
-													// with two words
-					String literalCommand = tokens[1].trim();
-					if (literalCommand.equalsIgnoreCase("wall")) {
-						showWall(operationalUser);
-					} else {
-						ansi_println("Failed to process command, Please try again");
-						printHelp();
-						continue;
-					}
-				} else if (tokens.length == 3) {
-					// post it, must be an update
-					String literalCommand = tokens[1].trim();
-					if ("->".equals(literalCommand)) {
-						postUpdate(operationalUser, userInput);
-					} else if ("follows".equalsIgnoreCase(literalCommand)) {
-						String followedUserName = tokens[2].trim();
-						User followedUser = userRepository.findByUserName(followedUserName);
-						if (followedUser == null) {
-							ansi_println(String.format("Failed to find followed user %s. Now creating them",
-									followedUserName));
-							followedUser = new User();
-							followedUser.setUserName(followedUserName);
-							userRepository.save(followedUser);
-							ansi_println("Created user " + followedUserName);
-						}
-						follow(operationalUser, followedUser);
-					}
-				} else if (userInput.contains("->")) {
-					String literalCommand = tokens[1].trim();
-					if ("->".equals(literalCommand)) {
-						int index = StringUtils.ordinalIndexOf(userInput, " ", 2);
-						postUpdate(operationalUser, userInput.substring(index));
-					}
+			if (tokens.length == 1) { // reading user time line
+				showTimelineFor(operationalUser);
+			} else if (tokens.length == 2) { // probably a command since
+												// we have a sentence
+												// with two words
+				String literalCommand = tokens[1].trim();
+				if (literalCommand.equalsIgnoreCase("wall")) {
+					showWall(operationalUser);
 				} else {
-					ansi_println("Failed to process the command. Please try again");
+					ansi_println("Failed to process command, Please try again");
+					printHelp();
+					return;
 				}
+			} else if (tokens.length == 3) {
+				// post it, must be an update
+				String literalCommand = tokens[1].trim();
+				if ("->".equals(literalCommand)) {
+					postUpdate(operationalUser, userInput);
+				} else if ("follows".equalsIgnoreCase(literalCommand)) {
+					String followedUserName = tokens[2].trim();
+					User followedUser = userRepository.findByUserName(followedUserName);
+					if (followedUser == null) {
+						ansi_println(
+								String.format("Failed to find followed user %s. Now creating them", followedUserName));
+						followedUser = new User();
+						followedUser.setUserName(followedUserName);
+						userRepository.save(followedUser);
+						ansi_println("Created user " + followedUserName);
+					}
+					follow(operationalUser, followedUser);
+				}
+			} else if (userInput.contains("->")) {
+				String literalCommand = tokens[1].trim();
+				if ("->".equals(literalCommand)) {
+					int index = StringUtils.ordinalIndexOf(userInput, " ", 2);
+					String target = userInput.substring(index);
+					postUpdate(operationalUser, target);
+				}
+			} else {
+				ansi_println("Failed to process the command. Please try again");
 			}
 		}
 	}
+
 
 	void showTimelineFor(User targetUser) {
 		DateTime now = new DateTime();

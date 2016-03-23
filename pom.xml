@@ -168,7 +168,7 @@
 			<url>http://mvnrepository.com/artifact</url>
 		</repository>
 		<repository>
-			<id>http://maven.springframework.org/milestone</id>
+			<id>milestone</id>
 			<url>http://maven.springframework.org/milestone</url>
 		</repository>
 	</repositories>
