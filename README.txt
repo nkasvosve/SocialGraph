@@ -12,7 +12,7 @@ com.codurance.social.ha (which uses Hazelcast).
 
 This is an extension point that could be used 
 
-to make interaction feasible oer the network, and rather cheaply in 
+to make interaction feasible over the network and rather cheaply in 
 
 terms of effort. It would be necessary to make the model entities 
 
@@ -26,4 +26,4 @@ listeners so that as soon as a message is posted, it is immediately published
 
 to all interested user clients (consoles, browsers, etc)
 
- and the clients would not need to poll storage.
+and the clients would not need to poll storage.
